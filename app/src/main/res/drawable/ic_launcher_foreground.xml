@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- ── Left ear (outer, warm brown) ── -->
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M20,36 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0"/>
+
+    <!-- ── Right ear (outer, warm brown) ── -->
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M62,36 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0"/>
+
+    <!-- ── Left ear (inner, soft pink) ── -->
+    <path
+        android:fillColor="#FFCCBC"
+        android:pathData="M26,36 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0"/>
+
+    <!-- ── Right ear (inner, soft pink) ── -->
+    <path
+        android:fillColor="#FFCCBC"
+        android:pathData="M68,36 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0"/>
+
+    <!-- ── Face (cream white) ── -->
+    <path
+        android:fillColor="#FFF8E1"
+        android:pathData="M26,58 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0"/>
+
+    <!-- ── Muzzle area (warm white ellipse) ── -->
+    <path
+        android:fillColor="#FFE0B2"
+        android:pathData="M40,66 a14,10 0 1,0 28,0 a14,10 0 1,0 -28,0"/>
+
+    <!-- ── Left eye (dark brown) ── -->
+    <path
+        android:fillColor="#3E2723"
+        android:pathData="M39,52 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"/>
+
+    <!-- ── Right eye (dark brown) ── -->
+    <path
+        android:fillColor="#3E2723"
+        android:pathData="M59,52 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"/>
+
+    <!-- ── Left eye shine ── -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,50 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"/>
+
+    <!-- ── Right eye shine ── -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,50 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"/>
+
+    <!-- ── Nose (deep pink) ── -->
+    <path
+        android:fillColor="#AD1457"
+        android:pathData="M50.5,63 a3.5,2.5 0 1,0 7,0 a3.5,2.5 0 1,0 -7,0"/>
+
+    <!-- ── Smile ── -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#5D4037"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:pathData="M46,70 Q54,78 62,70"/>
+
+    <!-- ── Left cheek blush (semi-transparent pink) ── -->
+    <path
+        android:fillColor="#F48FB1"
+        android:fillAlpha="0.55"
+        android:pathData="M30,68 a7,4 0 1,0 14,0 a7,4 0 1,0 -14,0"/>
+
+    <!-- ── Right cheek blush ── -->
+    <path
+        android:fillColor="#F48FB1"
+        android:fillAlpha="0.55"
+        android:pathData="M64,68 a7,4 0 1,0 14,0 a7,4 0 1,0 -14,0"/>
+
+    <!-- ── Three counting dots at bottom (1, 2, 3) ── -->
+    <path
+        android:fillColor="#FF7043"
+        android:pathData="M42,89 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"/>
+    <path
+        android:fillColor="#43A047"
+        android:pathData="M50,89 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"/>
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M58,89 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"/>
+
+</vector>
