@@ -1,0 +1,85 @@
+# Gradle files
+.gradle/
+build/
+**/build/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Keystore / Signing secrets
+*.jks
+*.keystore
+*.p12
+*.pfx
+release.properties
+signing.properties
+keystore.properties
+
+# Google Services / Firebase
+google-services.json
+GoogleService-Info.plist
+
+# API keys / secrets
+secrets.properties
+*.env
+.env.*
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries/
+.idea/dynamic.xml
+.idea/uiDesigner.xml
+.idea/jarRepositories.xml
+.idea/codeStyles/
+.idea/inspectionProfiles/
+.idea/vcs.xml
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+# Android Studio generated
+captures/
+.externalNativeBuild/
+.cxx/
+*.aab
+*.apk
+*.ap_
+output-metadata.json
+
+# NDK
+*.so
+obj/
+
+# Logs
+*.log
+logs/
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Android Profiling
+*.hprof
+
+# Test reports (generated)
+app/build/reports/
+app/build/test-results/
+
+# Kotlin compilation cache
+.kotlin/

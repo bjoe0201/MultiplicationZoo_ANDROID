@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Sky blue gradient background -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54" android:startY="0"
+                android:endX="54" android:endY="108">
+                <item android:offset="0.0" android:color="#64B5F6"/>
+                <item android:offset="0.65" android:color="#1E88E5"/>
+                <item android:offset="1.0" android:color="#1565C0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Cloud left -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.55"
+        android:pathData="M8,24 a9,7 0 1,0 18,0 a7,7 0 1,0 -10,0 a9,7 0 1,0 -8,0"/>
+
+    <!-- Cloud right -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.45"
+        android:pathData="M76,18 a8,6 0 1,0 16,0 a6,6 0 1,0 -9,0 a8,6 0 1,0 -7,0"/>
+
+    <!-- Green grass -->
+    <path
+        android:fillColor="#388E3C"
+        android:pathData="M0,88 Q27,80 54,84 Q81,80 108,88 L108,108 L0,108 Z"/>
+    <!-- Grass highlight -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M0,88 Q27,81 54,85 Q81,81 108,88 L108,91 Q81,83 54,87 Q27,83 0,91 Z"/>
+
+</vector>
