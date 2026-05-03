@@ -10,9 +10,10 @@ data class GameResult(
 )
 
 data class LeaderboardEntry(
-    val rank: Int,
+    val playerName: String = "",   // emoji string
     val score: Int,
     val correctCount: Int,
+    val wrongCount: Int,
     val totalRounds: Int,
     val selectedGroups: String,
     val date: String

@@ -58,12 +58,9 @@ class GameViewModel : ViewModel() {
         val currentRound = state.rounds[state.currentRoundIndex]
         if (currentRound.selectedAnswer != null) return null
 
-        val newTappedIndices = currentRound.tappedIndices.toMutableSet()
-        if (animalIndex in newTappedIndices) {
-            newTappedIndices.remove(animalIndex)
-        } else {
-            newTappedIndices.add(animalIndex)
-        }
+        // 不重複累計：已點擊的動物不再取消，只加入新的
+        if (animalIndex in currentRound.tappedIndices) return currentRound
+        val newTappedIndices = currentRound.tappedIndices + animalIndex
 
         val newRound = currentRound.copy(tappedIndices = newTappedIndices)
         val newRounds = state.rounds.toMutableList()

@@ -58,6 +58,30 @@ class TtsManager(context: Context) {
         speakText(text, language)
     }
 
+    /**
+     * 先唸正確答案數字，再接著唸 正確/錯誤 反饋
+     * (用 QUEUE_ADD 排隊，讓 TTS 引擎依序播放)
+     */
+    fun speakAnswerThenFeedback(correctAnswer: Int, isCorrect: Boolean, language: AppLanguage) {
+        if (!isReady) return
+        val locale = localeFor(language)
+
+        // 1. 先唸數字（QUEUE_FLUSH 清掉舊的音頻）
+        tts?.language = locale
+        tts?.speak(correctAnswer.toString(), TextToSpeech.QUEUE_FLUSH, null, "mz_ans")
+
+        // 2. 再接著唸正確/錯誤（QUEUE_ADD 排在後面）
+        val feedbackText = when {
+            isCorrect && language == AppLanguage.CHINESE -> "正確"
+            isCorrect && language == AppLanguage.ENGLISH -> "Correct"
+            isCorrect && language == AppLanguage.JAPANESE -> "正解"
+            language == AppLanguage.CHINESE -> "錯誤"
+            language == AppLanguage.ENGLISH -> "Incorrect"
+            else -> "不正解"
+        }
+        tts?.speak(feedbackText, TextToSpeech.QUEUE_ADD, null, "mz_fb")
+    }
+
     fun speakAnimalName(animal: Animal, language: AppLanguage) {
         val name = when (language) {
             AppLanguage.CHINESE -> animal.nameZH

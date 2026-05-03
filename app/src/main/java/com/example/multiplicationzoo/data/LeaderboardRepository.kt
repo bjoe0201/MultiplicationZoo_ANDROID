@@ -27,16 +27,17 @@ class LeaderboardRepository(private val context: Context) {
         parseLeaderboardData(data)
     }
 
-    suspend fun addScore(result: GameResult) {
+    suspend fun addScore(result: GameResult, playerName: String) {
         context.dataStore.edit { preferences ->
             val current = preferences[leaderboardKey] ?: ""
             val entries = parseLeaderboardData(current).toMutableList()
 
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val newEntry = LeaderboardEntry(
-                rank = 0,
+                playerName = playerName,
                 score = result.score,
                 correctCount = result.correctCount,
+                wrongCount = result.wrongCount,
                 totalRounds = result.totalRounds,
                 selectedGroups = result.selectedGroups.sorted().joinToString(","),
                 date = dateFormat.format(Date(result.timestamp))
@@ -56,33 +57,28 @@ class LeaderboardRepository(private val context: Context) {
         }
     }
 
-    private fun serializeLeaderboardData(entries: List<LeaderboardEntry>): String {
-        return entries.mapIndexed { index, entry ->
-            "${index + 1}|${entry.score}|${entry.correctCount}|${entry.totalRounds}|${entry.selectedGroups}|${entry.date}"
-        }.joinToString(";")
-    }
+    private fun serializeLeaderboardData(entries: List<LeaderboardEntry>): String =
+        entries.joinToString(";") { e ->
+            "${e.playerName}~${e.score}~${e.correctCount}~${e.wrongCount}~${e.totalRounds}~${e.selectedGroups}~${e.date}"
+        }
 
     private fun parseLeaderboardData(data: String): List<LeaderboardEntry> {
         if (data.isEmpty()) return emptyList()
-
         return data.split(";").mapNotNull { line ->
-            val parts = line.split("|")
-            if (parts.size == 6) {
+            val p = line.split("~")
+            if (p.size == 7) {
                 try {
                     LeaderboardEntry(
-                        rank = parts[0].toInt(),
-                        score = parts[1].toInt(),
-                        correctCount = parts[2].toInt(),
-                        totalRounds = parts[3].toInt(),
-                        selectedGroups = parts[4],
-                        date = parts[5]
+                        playerName = p[0],
+                        score = p[1].toInt(),
+                        correctCount = p[2].toInt(),
+                        wrongCount = p[3].toInt(),
+                        totalRounds = p[4].toInt(),
+                        selectedGroups = p[5],
+                        date = p[6]
                     )
-                } catch (e: Exception) {
-                    null
-                }
-            } else {
-                null
-            }
+                } catch (_: Exception) { null }
+            } else null
         }
     }
 }

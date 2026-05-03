@@ -3,17 +3,15 @@ package com.example.multiplicationzoo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.example.multiplicationzoo.data.LeaderboardRepository
 import com.example.multiplicationzoo.data.VoiceMode
 import com.example.multiplicationzoo.game.GameViewModel
@@ -25,7 +23,6 @@ import com.example.multiplicationzoo.ui.screens.LeaderboardScreen
 import com.example.multiplicationzoo.ui.screens.ResultScreen
 import com.example.multiplicationzoo.ui.screens.SettingsScreen
 import com.example.multiplicationzoo.ui.theme.MultiplicationZooTheme
-import kotlinx.coroutines.launch
 
 enum class Screen {
     HOME, GAME, RESULT, SETTINGS, LANGUAGE, LEADERBOARD
@@ -39,22 +36,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         ttsManager = TtsManager(this)
         leaderboardRepository = LeaderboardRepository(this)
 
         setContent {
             MultiplicationZooTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Color.White
-                ) {
-                    MainScreen(
-                        gameViewModel = gameViewModel,
-                        ttsManager = ttsManager,
-                        leaderboardRepository = leaderboardRepository
-                    )
-                }
+                MainScreen(
+                    gameViewModel = gameViewModel,
+                    ttsManager = ttsManager,
+                    leaderboardRepository = leaderboardRepository
+                )
             }
         }
     }
@@ -75,7 +68,6 @@ fun MainScreen(
     val gameSettings by gameViewModel.gameSettings.collectAsState()
     val gameState by gameViewModel.gameState.collectAsState()
     val leaderboard by leaderboardRepository.leaderboard.collectAsState(initial = emptyList())
-    val scope = rememberCoroutineScope()
 
     when (currentScreen.value) {
         Screen.HOME -> {
@@ -85,14 +77,11 @@ fun MainScreen(
                     gameViewModel.initializeGame(gameSettings)
                     currentScreen.value = Screen.GAME
                 },
-                onSettings = {
-                    currentScreen.value = Screen.SETTINGS
-                },
-                onLeaderboard = {
-                    currentScreen.value = Screen.LEADERBOARD
-                },
-                onLanguage = {
-                    currentScreen.value = Screen.LANGUAGE
+                onSettings = { currentScreen.value = Screen.SETTINGS },
+                onLeaderboard = { currentScreen.value = Screen.LEADERBOARD },
+                onLanguage = { currentScreen.value = Screen.LANGUAGE },
+                onSpeakAnimal = { animal, lang ->
+                    ttsManager.speakAnimalName(animal, lang)
                 },
                 modifier = Modifier.fillMaxSize()
             )
@@ -125,8 +114,7 @@ fun MainScreen(
                                 val countInPen = updatedRound.tappedIndices.count {
                                     it / updatedRound.perPen == penIndex
                                 }
-                                val isJustSelected = animalIndex in updatedRound.tappedIndices
-                                if (isJustSelected && countInPen == updatedRound.perPen) {
+                                if (animalIndex in updatedRound.tappedIndices && countInPen == updatedRound.perPen) {
                                     ttsManager.speakPenComplete(
                                         penIndex + 1,
                                         updatedRound.perPen,
@@ -139,7 +127,8 @@ fun MainScreen(
                     },
                     onAnswerSelected = { answer ->
                         val isCorrect = gameViewModel.selectAnswer(answer) ?: return@GameScreen
-                        ttsManager.speakFeedback(isCorrect, gameSettings.language)
+                        val correctAnswer = gameState.rounds[gameState.currentRoundIndex].correctAnswer
+                        ttsManager.speakAnswerThenFeedback(correctAnswer, isCorrect, gameSettings.language)
                     },
                     onRoundPresented = { multiplicand, multiplier ->
                         if (gameSettings.voiceMode != VoiceMode.NONE) {
@@ -161,23 +150,15 @@ fun MainScreen(
         }
 
         Screen.RESULT -> {
-            val result = gameViewModel.getGameResult()
             ResultScreen(
-                score = result.score,
-                correctCount = result.correctCount,
-                wrongCount = result.wrongCount,
-                totalRounds = result.totalRounds,
+                gameResult = gameViewModel.getGameResult(),
                 language = gameSettings.language,
-                onHome = {
-                    scope.launch {
-                        leaderboardRepository.addScore(result)
-                    }
-                    currentScreen.value = Screen.HOME
-                },
+                repository = leaderboardRepository,
                 onPlayAgain = {
                     gameViewModel.initializeGame(gameSettings)
                     currentScreen.value = Screen.GAME
                 },
+                onHome = { currentScreen.value = Screen.HOME },
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -185,12 +166,9 @@ fun MainScreen(
         Screen.SETTINGS -> {
             SettingsScreen(
                 settings = gameSettings,
-                onSettingsChanged = { newSettings ->
-                    gameViewModel.updateGameSettings(newSettings)
-                },
-                onBack = {
-                    currentScreen.value = Screen.HOME
-                },
+                onSettingsChanged = { gameViewModel.updateGameSettings(it) },
+                onBack = { currentScreen.value = Screen.HOME },
+                leaderboardRepository = leaderboardRepository,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -198,13 +176,11 @@ fun MainScreen(
         Screen.LANGUAGE -> {
             LanguageScreen(
                 currentLanguage = gameSettings.language,
-                onLanguageSelected = { language ->
-                    gameViewModel.updateGameSettings(gameSettings.copy(language = language))
+                onLanguageSelected = { lang ->
+                    gameViewModel.updateGameSettings(gameSettings.copy(language = lang))
                     currentScreen.value = Screen.HOME
                 },
-                onBack = {
-                    currentScreen.value = Screen.HOME
-                },
+                onBack = { currentScreen.value = Screen.HOME },
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -213,14 +189,8 @@ fun MainScreen(
             LeaderboardScreen(
                 entries = leaderboard,
                 language = gameSettings.language,
-                onClear = {
-                    scope.launch {
-                        leaderboardRepository.clearLeaderboard()
-                    }
-                },
-                onBack = {
-                    currentScreen.value = Screen.HOME
-                },
+                onClear = { /* handled in SettingsScreen */ },
+                onBack = { currentScreen.value = Screen.HOME },
                 modifier = Modifier.fillMaxSize()
             )
         }
