@@ -181,12 +181,14 @@ Forced light mode only — no dark theme, no dynamic color. Child-friendly palet
 
 #### 1. 建置並驗證 APK
 
-```bash
+Windows PowerShell：
+
+```powershell
 # 建置已簽章、可安裝的 release APK
-./gradlew clean assembleRelease -x test
+.\gradlew.bat clean assembleRelease -x test
 
 # 產物必須是這個檔案
-app/build/outputs/apk/release/app-release.apk
+.\app\build\outputs\apk\release\app-release.apk
 ```
 
 Windows PowerShell 檢查檔案是否存在：
@@ -199,8 +201,14 @@ Get-Item .\app\build\outputs\apk\release\app-release.apk
 簽章驗證（Windows PowerShell）：
 
 ```powershell
-$sdk = (Get-Content .\local.properties | Where-Object { $_ -like 'sdk.dir=*' } | ForEach-Object { ($_ -replace '^sdk.dir=', '') -replace '\\:', ':' -replace '\\\\', '\' })
+$sdk = if (Test-Path .\local.properties) {
+  Get-Content .\local.properties | Where-Object { $_ -like 'sdk.dir=*' } | ForEach-Object { ($_ -replace '^sdk.dir=', '') -replace '\\:', ':' -replace '\\\\', '\' }
+}
+if (-not $sdk) { $sdk = $env:ANDROID_HOME }
+if (-not $sdk) { $sdk = $env:ANDROID_SDK_ROOT }
+if (-not $sdk) { throw 'Android SDK path not found. Set sdk.dir in local.properties or ANDROID_HOME/ANDROID_SDK_ROOT.' }
 $apksigner = Get-ChildItem -Path (Join-Path $sdk 'build-tools') -Recurse -Filter 'apksigner.bat' | Sort-Object FullName -Descending | Select-Object -First 1
+if (-not $apksigner) { throw 'apksigner.bat not found under Android SDK build-tools.' }
 & $apksigner.FullName verify --verbose --print-certs .\app\build\outputs\apk\release\app-release.apk
 ```
 
@@ -216,8 +224,10 @@ Number of signers: 1
 
 #### 2. 測試、提交、推送
 
-```bash
-./gradlew test
+Windows PowerShell：
+
+```powershell
+.\gradlew.bat test
 
 git status
 git add -A
@@ -227,7 +237,9 @@ git push origin main
 
 #### 3. 建立並推送 tag
 
-```bash
+Windows PowerShell：
+
+```powershell
 git fetch origin --tags --prune
 git tag --list "vX.X.X"
 
@@ -238,24 +250,37 @@ git push origin vX.X.X
 
 注意：如果 `vX.X.X` tag 已存在但指向舊 commit，先停止並確認是否要刪除/重建 tag，避免 release 綁到錯誤版本。
 
+確認 tag 指向目前 release commit：
+
+```powershell
+git rev-parse HEAD
+git rev-list -n 1 vX.X.X
+```
+
 #### 4. 建立 GitHub Release 並上傳 APK
 
-```bash
-gh release create vX.X.X "app/build/outputs/apk/release/app-release.apk" \
-  --title "🦁 Multiplication Zoo vX.X.X — <標題>" \
-  --notes "<本次更新說明>" \
+> 只上傳 `app/build/outputs/apk/release/app-release.apk`。不要上傳 debug APK、unsigned APK、mapping 或任何 keystore/私鑰檔。
+
+Windows PowerShell：
+
+```powershell
+gh release create vX.X.X ".\app\build\outputs\apk\release\app-release.apk" `
+  --title "🦁 Multiplication Zoo vX.X.X — <標題>" `
+  --notes "<本次更新說明>" `
   --latest
 ```
 
 若 Release 已存在但要替換 APK：
 
-```bash
-gh release upload vX.X.X "app/build/outputs/apk/release/app-release.apk" --clobber
+```powershell
+gh release upload vX.X.X ".\app\build\outputs\apk\release\app-release.apk" --clobber
 ```
+
+> 注意：`gh release upload --clobber` 只替換 asset，不會自動更新 release title/notes/tag 指向；必要時另外使用 `gh release edit`。
 
 發佈後驗證：
 
-```bash
+```powershell
 gh release view vX.X.X --json tagName,name,url,publishedAt,assets
 gh release list --limit 100
 ```
@@ -266,10 +291,31 @@ Release asset 必須包含：
 app-release.apk
 ```
 
-#### 5. 安裝注意事項
+#### 5. 刪除舊 GitHub Releases，只保留最新
+
+確認最新 `vX.X.X` 已存在且 asset 包含 `app-release.apk` 後，再刪除舊 Release：
+
+```powershell
+gh release list --limit 100
+gh release delete v舊版本 --yes
+gh release list --limit 100
+```
+
+範例：
+
+```powershell
+gh release delete v1.0.1 --yes
+```
+
+> 預設只刪除 GitHub Release 與其 assets，不刪除 git tag，通常較安全。若確定連舊 tag 也要刪除，才使用 `gh release delete v舊版本 --cleanup-tag --yes` 或手動刪除遠端/本機 tag。
+
+#### 6. 安裝注意事項
 
 - 若手機已安裝同 package name 但不同簽章的舊版 APK，直接更新可能失敗；請先解除安裝舊版再安裝新版。
+- 解除安裝通常會清除 App 資料；若需要保留資料，先確認是否有備份策略。
 - 若新版 `versionCode` 小於或等於手機已安裝版本，Android 可能拒絕降版安裝；每版必須遞增 `versionCode`。
+- 若本版使用 debug fallback 簽章，未來改用正式私有 release keystore 時，已安裝 debug fallback 簽章版本的裝置也會因簽章不同而需要先解除安裝。
+- debug fallback 簽章的 `app-release.apk` 可安裝、適合測試/家庭分享；正式公開長期發佈建議使用私有 release keystore 並持續保存同一把 keystore。
 - GitHub Release 只上傳 `app-release.apk`，不要上傳 debug APK、unsigned APK、mapping、keystore 或任何私鑰檔。
 - 發佈後建議實機/平板下載 GitHub Release asset 安裝一次，確認下載檔案可正常安裝與啟動。
 
