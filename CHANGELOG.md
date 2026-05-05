@@ -7,6 +7,21 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.0.2] — 2026-05-05
+
+### Fixed
+- **Release APK 安裝失敗** — 修正 GitHub Releases 發佈流程，改上傳已簽章、可安裝的 `app-release.apk`，不再使用 `app-release-unsigned.apk`
+- **Release 簽章設定** — `assembleRelease` 支援私有 release keystore；未設定時 fallback 使用 debug keystore 產出可側載 APK
+
+### Added
+- **Keystore 範本** — 新增 `keystore.properties.example`，方便正式發佈時設定私有 release keystore
+- **APK 簽章驗證文件** — 補充 PowerShell `apksigner` 驗證步驟與 GitHub Release asset 檢查流程
+
+### Changed
+- `AppVersion.VERSION_NAME` 升至 `"1.0.2"`
+
+---
+
 ## [1.0.1] — 2026-05-03
 
 ### Added

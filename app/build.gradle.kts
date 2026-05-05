@@ -1,6 +1,22 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.isFile) {
+        keystorePropertiesFile.inputStream().use(::load)
+    }
+}
+
+val releaseSigningValue: (String) -> String? = { name ->
+    (keystoreProperties.getProperty(name)
+        ?: providers.gradleProperty(name).orNull
+        ?: providers.environmentVariable(name).orNull)
+        ?.takeIf { it.isNotBlank() }
 }
 
 android {
@@ -15,15 +31,46 @@ android {
         applicationId = "com.example.multiplicationzoo"
         minSdk = 31
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        val releaseStoreFile = releaseSigningValue("RELEASE_STORE_FILE")
+        val releaseStorePassword = releaseSigningValue("RELEASE_STORE_PASSWORD")
+        val releaseKeyAlias = releaseSigningValue("RELEASE_KEY_ALIAS")
+        val releaseKeyPassword = releaseSigningValue("RELEASE_KEY_PASSWORD")
+        val releaseSigningValues = listOf(
+            releaseStoreFile,
+            releaseStorePassword,
+            releaseKeyAlias,
+            releaseKeyPassword
+        )
+
+        if (releaseSigningValues.any { it != null } && releaseSigningValues.any { it == null }) {
+            throw GradleException(
+                "Incomplete release signing config. Set RELEASE_STORE_FILE, " +
+                    "RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, and RELEASE_KEY_PASSWORD, " +
+                    "or leave all unset to use the debug keystore fallback."
+            )
+        }
+
+        if (releaseSigningValues.all { it != null }) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile!!)
+                storePassword = releaseStorePassword!!
+                keyAlias = releaseKeyAlias!!
+                keyPassword = releaseKeyPassword!!
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

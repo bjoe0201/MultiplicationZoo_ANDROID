@@ -9,7 +9,7 @@
 > A fun multiplication game for kids aged 6–12!
 > かわいい動物と一緒に九九を練習しよう！
 
-**📦 Version：1.0.1** &nbsp;｜&nbsp; 📄 License：MIT &nbsp;｜&nbsp; 📱 Platform：Android (API 31+)
+**📦 Version：1.0.2** &nbsp;｜&nbsp; 📄 License：MIT &nbsp;｜&nbsp; 📱 Platform：Android (API 31+)
 
 </div>
 
@@ -143,8 +143,9 @@ App 支援三種語言，首次啟動時選擇，也可隨時從主畫面切換�
 
 ### 方法一：直接安裝 APK（最簡單）
 1. 前往 [Releases](../../releases) 頁面
-2. 下載最新的 `app-debug.apk`
+2. 下載最新的 `app-release.apk`（已簽章、可安裝）
 3. 在 Android 裝置上開啟安裝（需要允許「未知來源」安裝）
+4. 若手機已安裝相同 App 但簽章不同的舊版 APK，請先解除安裝舊版再安裝新版
 
 ### 方法二：自行編譯 Build from Source
 需要 Android Studio、JDK 17+
@@ -154,6 +155,10 @@ git clone https://github.com/YOUR_USERNAME/MultiplicationZoo_ANDROID.git
 cd MultiplicationZoo_ANDROID
 ./gradlew assembleDebug
 # APK 位於 app/build/outputs/apk/debug/app-debug.apk
+
+# 建置已簽章、可安裝的 release APK
+./gradlew assembleRelease
+# APK 位於 app/build/outputs/apk/release/app-release.apk
 ```
 
 **最低需求**：Android 12（API 31+）

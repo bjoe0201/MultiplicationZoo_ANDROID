@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Build release APK
 ./gradlew assembleRelease
+# Output: app/build/outputs/apk/release/app-release.apk (signed/installable)
 
 # Run unit tests
 ./gradlew test
@@ -151,7 +152,7 @@ Forced light mode only — no dark theme, no dynamic color. Child-friendly palet
 
 ## 🔖 Version Update Checklist
 
-每次發布新版本前，**必須同步更新以下 6 個地方**：
+每次發布新版本前，**必須同步更新以下 7 個地方**：
 
 | # | 檔案 | 欄位 | 說明 |
 |---|------|------|------|
@@ -163,26 +164,112 @@ Forced light mode only — no dark theme, no dynamic color. Child-friendly palet
 | 6 | `README.md` | 頁首 `**📦 Version：X.X.X**` | 更新顯示版本 |
 | 7 | `CHANGELOG.md` | 新增 `## [X.X.X] — YYYY-MM-DD` 區塊 | 記錄本次變更內容 |
 
-### 發布流程
+### GitHub Releases 發佈流程（含 APK）
+
+> 目標：每次正式發佈只上傳**已簽章、可安裝**的 `app-release.apk`。
+
+#### 0. 發佈前檢查
+
+- 確認已完成上方 7 個版本位置更新。
+- 確認 GitHub CLI 已登入：`gh auth status`。
+- 確認目前分支是 `main`，且遠端是正確 repo：`git branch --show-current`、`git remote -v`。
+- 正式公開發佈建議使用私有 release keystore：
+  - 複製 `keystore.properties.example` → `keystore.properties`
+  - 填入 `RELEASE_STORE_FILE`、`RELEASE_STORE_PASSWORD`、`RELEASE_KEY_ALIAS`、`RELEASE_KEY_PASSWORD`
+  - **不可提交** `keystore.properties`、`.jks`、`.keystore`
+- 若未設定正式 keystore，`assembleRelease` 會 fallback 使用 debug keystore 簽章；APK 可側載安裝，但只適合測試/家庭分享，不建議作為正式公開長期簽章。
+
+#### 1. 建置並驗證 APK
 
 ```bash
-# 1. 更新上述 7 個地方後，執行完整建置
+# 建置已簽章、可安裝的 release APK
 ./gradlew clean assembleRelease -x test
 
-# 2. 提交 git
+# 產物必須是這個檔案
+app/build/outputs/apk/release/app-release.apk
+```
+
+Windows PowerShell 檢查檔案是否存在：
+
+```powershell
+Test-Path .\app\build\outputs\apk\release\app-release.apk
+Get-Item .\app\build\outputs\apk\release\app-release.apk
+```
+
+簽章驗證（Windows PowerShell）：
+
+```powershell
+$sdk = (Get-Content .\local.properties | Where-Object { $_ -like 'sdk.dir=*' } | ForEach-Object { ($_ -replace '^sdk.dir=', '') -replace '\\:', ':' -replace '\\\\', '\' })
+$apksigner = Get-ChildItem -Path (Join-Path $sdk 'build-tools') -Recurse -Filter 'apksigner.bat' | Sort-Object FullName -Descending | Select-Object -First 1
+& $apksigner.FullName verify --verbose --print-certs .\app\build\outputs\apk\release\app-release.apk
+```
+
+驗證結果至少要看到：
+
+```text
+Verifies
+Verified using v2 scheme (APK Signature Scheme v2): true
+Number of signers: 1
+```
+
+⚠️ **不要上傳** `app-release-unsigned.apk`；Android 會顯示「應用程式套件無效」或無法完成安裝。
+
+#### 2. 測試、提交、推送
+
+```bash
+./gradlew test
+
+git status
 git add -A
 git commit -m "release: vX.X.X — <簡短說明>"
-
-# 3. 推送到 GitHub
 git push origin main
+```
 
-# 4. 建立 git tag
+#### 3. 建立並推送 tag
+
+```bash
+git fetch origin --tags --prune
+git tag --list "vX.X.X"
+
+# 若 tag 不存在才建立
 git tag -a vX.X.X -m "Release vX.X.X"
 git push origin vX.X.X
-
-# 5. 建立 GitHub Release 並附上 APK
-gh release create vX.X.X "app/build/outputs/apk/release/app-release-unsigned.apk" \
-  --title "🦁 Multiplication Zoo vX.X.X — <標題>" \
-  --notes "<本次更新說明>"
 ```
+
+注意：如果 `vX.X.X` tag 已存在但指向舊 commit，先停止並確認是否要刪除/重建 tag，避免 release 綁到錯誤版本。
+
+#### 4. 建立 GitHub Release 並上傳 APK
+
+```bash
+gh release create vX.X.X "app/build/outputs/apk/release/app-release.apk" \
+  --title "🦁 Multiplication Zoo vX.X.X — <標題>" \
+  --notes "<本次更新說明>" \
+  --latest
+```
+
+若 Release 已存在但要替換 APK：
+
+```bash
+gh release upload vX.X.X "app/build/outputs/apk/release/app-release.apk" --clobber
+```
+
+發佈後驗證：
+
+```bash
+gh release view vX.X.X --json tagName,name,url,publishedAt,assets
+gh release list --limit 100
+```
+
+Release asset 必須包含：
+
+```text
+app-release.apk
+```
+
+#### 5. 安裝注意事項
+
+- 若手機已安裝同 package name 但不同簽章的舊版 APK，直接更新可能失敗；請先解除安裝舊版再安裝新版。
+- 若新版 `versionCode` 小於或等於手機已安裝版本，Android 可能拒絕降版安裝；每版必須遞增 `versionCode`。
+- GitHub Release 只上傳 `app-release.apk`，不要上傳 debug APK、unsigned APK、mapping、keystore 或任何私鑰檔。
+- 發佈後建議實機/平板下載 GitHub Release asset 安裝一次，確認下載檔案可正常安裝與啟動。
 
